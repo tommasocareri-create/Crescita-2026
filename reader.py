@@ -46,7 +46,7 @@ def _safe(v):
         return None
 
 def fetch_sheet_data():
-   url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=1658406014"
+    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=1658406014"
     resp = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
     if resp.status_code != 200:
         raise Exception(f"Errore download Google Sheet ({resp.status_code}). Verifica che il foglio sia pubblico.")
