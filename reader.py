@@ -58,6 +58,7 @@ def fetch_sheet_data():
             if val.strip():
                 grid[(r_idx, c_idx)] = val.strip()
     return grid
+
 def get_cell(grid, row_1indexed, col_letter):
     return grid.get((row_1indexed - 1, col_letter_to_index(col_letter)), None)
     def load_data(path=None):
