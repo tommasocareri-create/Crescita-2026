@@ -1,15 +1,15 @@
 """
 app.py — Patrimonio 2026 Dashboard
-Legge direttamente da Piano_2026.xlsx (foglio C.E.)
+Legge direttamente da Google Sheets (Piano 2026 · C.E.)
 """
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from reader import load_data, get_filled_months, EXCEL_PATH
+from reader import load_data, get_filled_months, EXCEL_PATH, SHEET_ID
 import os
-from reader import SHEET_ID
+
 st.set_page_config(page_title="Patrimonio 2026", page_icon="💰", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -92,7 +92,6 @@ CHART_LAYOUT = dict(
 @st.cache_data(ttl=30)
 def get_data(path):
     return load_data(path)
-
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<div style="font-family:DM Serif Display,serif;font-size:1.5rem;color:#F0C040">💰 Patrimonio</div>', unsafe_allow_html=True)
@@ -109,24 +108,19 @@ with st.sidebar:
     page = st.radio("", ["📊 Dashboard", "📋 Tabella Mensile", "📈 Grafici", "💸 Entrate"], label_visibility="collapsed")
     st.divider()
 
-   custom_path = SHEET_ID
     if st.button("🔄 Aggiorna dati", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 
     try:
-        data = get_data(custom_path)
+        data = get_data(SHEET_ID)
         filled = get_filled_months(data)
         st.markdown('<div style="font-family:DM Mono,monospace;font-size:.62rem;color:#B0C4D8;letter-spacing:1.5px;margin-top:.6rem">MESI COMPILATI</div>', unsafe_allow_html=True)
         pills = "".join(f'<span class="pill {"pill-ok" if m in filled else "pill-no"}">{m[:3].upper()}</span>' for m in data["months_order"])
         st.markdown(pills, unsafe_allow_html=True)
-        import datetime
         st.markdown('<div style="font-size:.63rem;color:#B0C4D8;margin-top:.5rem;font-family:DM Mono,monospace">📊 Google Sheets · Live</div>', unsafe_allow_html=True)
-    except FileNotFoundError:
-        st.error("File non trovato. Verifica il percorso.")
-        st.stop()
     except Exception as e:
-        st.error(f"Errore lettura file: {e}")
+        st.error(f"Errore lettura Google Sheet: {e}")
         st.stop()
 # ── Derived ───────────────────────────────────────────────────────────────────
 months_order = data["months_order"]
@@ -167,6 +161,7 @@ def color_prog(val):
 
 TABLE_PROPS = {"background-color":"#152233","color":"#FFFFFF","border":"1px solid #1E3448","font-size":"13px","padding":"8px 12px"}
 TABLE_TH    = [{"selector":"th","props":[("background-color","#0A1520"),("color","#F0C040"),("font-size","11px"),("text-transform","uppercase"),("padding","8px 12px"),("border","1px solid #1E3448")]}]
+
 # ══════════════════════════════════════════════════════════════════════════════
 # DASHBOARD
 # ══════════════════════════════════════════════════════════════════════════════
@@ -175,7 +170,7 @@ if page == "📊 Dashboard":
     st.markdown(f'<div class="sub-title">Aggiornato al {last_month or "—"} · {sym} {cur}</div>', unsafe_allow_html=True)
 
     if not filled:
-        st.markdown('<div class="warn-box">⚠️ Nessun mese compilato. Aggiorna l\'Excel e premi Aggiorna dati.</div>', unsafe_allow_html=True)
+        st.warning("Nessun mese compilato nel Google Sheet.")
 
     k1, k2, k3, k4 = st.columns(4)
     bar = min(prog_obj, 100)
@@ -454,7 +449,6 @@ elif page == "💸 Entrate":
 
     filled_inc = [m for m in months_order if mi[m]["filled"]]
 
-    # Calcoli
     stip_ytd  = sum((mi[m]["stipendio"] or 0) for m in filled_inc) * mul
     stip_avg  = stip_ytd / len(filled_inc) if filled_inc else 0
     lorde_ytd = (inc_summary.get("Entrate Lorde",{}).get("total") or 0) * mul
@@ -490,7 +484,6 @@ elif page == "💸 Entrate":
         css_yoy = "pos" if (yoy_lorde or 0) >= 0 else "neg"
         st.markdown(kpi("YoY Entrate Lorde", fp(yoy_lorde) if yoy_lorde is not None else "—",
             "vs anno precedente", css_yoy), unsafe_allow_html=True)
-
 # ── KPI ANNO PRECEDENTE ──
     st.markdown('<div class="sec-head">📆 Riferimento Anno Precedente 2025</div>', unsafe_allow_html=True)
     p1, p2, p3, p4 = st.columns(4)
@@ -512,7 +505,7 @@ elif page == "💸 Entrate":
         st.markdown(kpi("Aliquota 2025", f"{py_al:.1f}%", "Pressione fiscale media"), unsafe_allow_html=True)
 
     if not filled_inc:
-        st.warning("Nessun dato entrate nel file Excel.")
+        st.warning("Nessun dato entrate nel Google Sheet.")
         st.stop()
 
     # ── Grafici ──
@@ -573,5 +566,4 @@ elif page == "💸 Entrate":
         .set_properties(**TABLE_PROPS)
         .set_table_styles(TABLE_TH))
     st.dataframe(styled_inc, use_container_width=True, hide_index=True)
-
 
