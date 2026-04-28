@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from reader import load_data, get_filled_months, EXCEL_PATH
 import os
-
+from reader import SHEET_ID
 st.set_page_config(page_title="Patrimonio 2026", page_icon="💰", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -109,7 +109,7 @@ with st.sidebar:
     page = st.radio("", ["📊 Dashboard", "📋 Tabella Mensile", "📈 Grafici", "💸 Entrate"], label_visibility="collapsed")
     st.divider()
 
-    custom_path = st.text_input("Percorso Excel", value=EXCEL_PATH, key="fpath")
+   custom_path = SHEET_ID
     if st.button("🔄 Aggiorna dati", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
@@ -121,8 +121,7 @@ with st.sidebar:
         pills = "".join(f'<span class="pill {"pill-ok" if m in filled else "pill-no"}">{m[:3].upper()}</span>' for m in data["months_order"])
         st.markdown(pills, unsafe_allow_html=True)
         import datetime
-        dt = datetime.datetime.fromtimestamp(os.path.getmtime(custom_path))
-        st.markdown(f'<div style="font-size:.63rem;color:#B0C4D8;margin-top:.5rem;font-family:DM Mono,monospace">File: {dt.strftime("%d/%m %H:%M")}</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:.63rem;color:#B0C4D8;margin-top:.5rem;font-family:DM Mono,monospace">📊 Google Sheets · Live</div>', unsafe_allow_html=True)
     except FileNotFoundError:
         st.error("File non trovato. Verifica il percorso.")
         st.stop()
