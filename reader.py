@@ -9,7 +9,7 @@ from typing import Optional
 
 SHEET_ID   = "1HlG6IDmzkwmpZ5LdfiQB5TM5Ma7y5tVzbwTC65u5K5k"
 SHEET_NAME = "C.E."
-EXCEL_PATH = ""  # mantenuto per compatibilità con app.py
+EXCEL_PATH = ""
 
 MONTHS = [
     ("D","Gennaio"),("H","Febbraio"),("L","Marzo"),("P","Aprile"),
@@ -25,13 +25,13 @@ MONTH_EXTRA = {
 INCOME_ROWS    = {21:"Entrate Lorde Stipendio",22:"Altre Entrate",23:"Entrate Lorde",24:"Entrate Nette"}
 PREV_YEAR_ROWS = {27:"Entrate Lorde Stipendio",28:"Altre Entrate",29:"Entrate Lorde",30:"Entrate Nette"}
 
-def col_letter_to_index(col: str) -> int:
+def col_letter_to_index(col):
     result = 0
     for ch in col.upper():
         result = result * 26 + (ord(ch) - ord('A') + 1)
     return result - 1
 
-def _safe(v) -> Optional[float]:
+def _safe(v):
     if v is None or v == "": return None
     s = str(v)
     if any(x in s for x in ["DIV","REF","VALUE","N/A","#"]): return None
@@ -46,10 +46,8 @@ def _safe(v) -> Optional[float]:
         return None
 
 def fetch_sheet_data():
-    """Scarica la pagina C.E. come CSV pubblico da Google Sheets."""
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=0"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    resp = requests.get(url, timeout=20, headers=headers)
+    resp = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
     if resp.status_code != 200:
         raise Exception(f"Errore download Google Sheet ({resp.status_code}). Verifica che il foglio sia pubblico.")
     grid = {}
@@ -61,34 +59,30 @@ def fetch_sheet_data():
 
 def get_cell(grid, row_1indexed, col_letter):
     return grid.get((row_1indexed - 1, col_letter_to_index(col_letter)), None)
-    def load_data(path=None):
-    grid = fetch_sheet_data()
 
+def load_data(path=None):
+    grid = fetch_sheet_data()
     assets = []
     for row in range(9, 20):
         name  = get_cell(grid, row, "A")
         start = _safe(get_cell(grid, row, "B"))
         if name and isinstance(name, str) and name.strip():
             assets.append({"name": name.strip(), "start": start or 0})
-
     start_total = _safe(get_cell(grid, 8, "B")) or 0
     obj_total   = _safe(get_cell(grid, 8, "AZ"))
     objectives  = {a["name"]: _safe(get_cell(grid, 9+i, "AZ")) for i, a in enumerate(assets)}
-
     monthly_patrimonio = {}
     for col_letter, month_name in MONTHS:
         var_col, varpct_col, weight_col = MONTH_EXTRA[col_letter]
         total_val = _safe(get_cell(grid, 8, col_letter))
         filled    = total_val is not None and total_val > 0
-        asset_data = [{
-            "name":    a["name"],
+        asset_data = [{"name": a["name"],
             "value":   _safe(get_cell(grid, 9+i, col_letter)),
             "var_eur": _safe(get_cell(grid, 9+i, var_col)),
             "var_pct": _safe(get_cell(grid, 9+i, varpct_col)),
             "weight":  _safe(get_cell(grid, 9+i, weight_col)),
         } for i, a in enumerate(assets)]
         monthly_patrimonio[month_name] = {"totale": total_val, "assets": asset_data, "filled": filled}
-
     monthly_income = {}
     for col_letter, month_name in MONTHS:
         stip  = _safe(get_cell(grid, 21, col_letter))
@@ -101,7 +95,6 @@ def get_cell(grid, row_1indexed, col_letter):
             "stipendio": stip, "altre": altre, "lorde": lorde, "nette": nette,
             "filled": any(x is not None for x in [stip, altre, lorde, nette]),
         }
-
     income_summary = {
         label: {"avg": _safe(get_cell(grid, row, "BB")),
                 "total": _safe(get_cell(grid, row, "BC")),
@@ -110,7 +103,6 @@ def get_cell(grid, row_1indexed, col_letter):
     }
     prev_year = {label: _safe(get_cell(grid, row, "B")) for row, label in PREV_YEAR_ROWS.items()}
     cagr_ytd  = _safe(get_cell(grid, 20, "AZ"))
-
     return {
         "excel_path": SHEET_ID, "start_total": start_total,
         "assets": assets, "objectives": objectives, "obj_total": obj_total,
