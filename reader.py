@@ -1,15 +1,10 @@
-"""
-reader.py — Legge i dati dalla pagina C.E. di Piano 2026 (Google Sheets)
-Usa l'export CSV pubblico di Google Sheets
-"""
 import requests
 import csv
 import io
-from typing import Optional
 
-SHEET_ID   = "1HlG6IDmzkwmpZ5LdfiQB5TM5Ma7y5tVzbwTC65u5K5k"
+# L'ID estratto dal tuo link di Google Sheets
+SHEET_ID = "1HlG6IDmzkwmpZ5LdfiQB5TM5Ma7y5tVzbwTC65u5K5k"
 SHEET_NAME = "C.E."
-EXCEL_PATH = ""
 
 MONTHS = [
     ("D","Gennaio"),("H","Febbraio"),("L","Marzo"),("P","Aprile"),
