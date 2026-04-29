@@ -125,16 +125,20 @@ with st.sidebar:
     if st.button("🔄 Aggiorna dati", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
-    try:
-        data = get_data()
-        filled = get_filled_months(data)
-        st.markdown('<div style="font-family:DM Mono,monospace;font-size:.62rem;color:#B0C4D8;letter-spacing:1.5px;margin-top:.6rem">MESI COMPILATI</div>', unsafe_allow_html=True)
+   st.markdown('<div style="font-family:DM Mono,monospace;font-size:.62rem;color:#B0C4D8;letter-spacing:1.5px;margin-top:.6rem">MESI COMPILATI</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:.63rem;color:#B0C4D8;margin-top:.5rem;font-family:DM Mono,monospace">📊 Google Sheets · Live</div>', unsafe_allow_html=True)
+
+try:
+    data = get_data()
+    filled = get_filled_months(data)
+except Exception as e:
+    st.error(f"Errore lettura Google Sheet: {e}")
+    st.stop()
+
+with st.sidebar:
+    if filled:
         pills = "".join(f'<span class="pill {"pill-ok" if m in filled else "pill-no"}">{m[:3].upper()}</span>' for m in data["months_order"])
         st.markdown(pills, unsafe_allow_html=True)
-        st.markdown('<div style="font-size:.63rem;color:#B0C4D8;margin-top:.5rem;font-family:DM Mono,monospace">📊 Google Sheets · Live</div>', unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"Errore lettura Google Sheet: {e}")
-        st.stop()
 
 months_order = data["months_order"]
 assets       = data["assets"]
