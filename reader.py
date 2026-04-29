@@ -41,17 +41,23 @@ def _safe(v):
         return None
 
 def fetch_sheet_data():
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=1658406014"
+    # 1. INCOLLA QUI TRA LE VIRGOLETTE IL LINK CHE HAI APPENA CREATO CON "PUBBLICA SUL WEB"
+    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJaIzdbR_Bs3r2nVZWPWglma3Vnd4Lp2m6yZYnBsJk3kQYBqcqS51yHBA1VapuXgjDk6j3kphwpsED/pub?gid=1658406014&single=true&output=csv"
+    
     resp = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
     if resp.status_code != 200:
-        raise Exception(f"Errore download Google Sheet ({resp.status_code}). Verifica che il foglio sia pubblico.")
+        raise Exception(f"Errore download Google Sheet ({resp.status_code}). Verifica il link.")
+    
+    # 2. CONTROLLO SALVAVITA: Stiamo ricevendo HTML invece di dati?
+    if "<html" in resp.text.lower() or "<body" in resp.text.lower():
+        raise Exception("Blocco di Google rilevato! Ricevuta una pagina HTML invece dei dati. Assicurati di aver generato il link da 'File > Condividi > Pubblica sul web'.")
+        
     grid = {}
     for r_idx, row in enumerate(csv.reader(io.StringIO(resp.text))):
         for c_idx, val in enumerate(row):
             if val.strip():
                 grid[(r_idx, c_idx)] = val.strip()
     return grid
-
 def get_cell(grid, row_1indexed, col_letter):
     return grid.get((row_1indexed - 1, col_letter_to_index(col_letter)), None)
 
