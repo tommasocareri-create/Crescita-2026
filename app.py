@@ -420,7 +420,7 @@ elif page == "💸 Entrate":
     st.write(f"DEBUG: filled={filled}, last_month={last_month}, start_total={start_total}, last_total={last_total}")
 if not filled:
     st.warning("Nessun mese compilato nel Google Sheet.")
-        st.stop()
+    st.stop()
     st.markdown('<div class="sec-head">Entrate Mensili & Cumulate</div>', unsafe_allow_html=True)
     x_inc = [m[:3].upper() for m in filled_inc]
     lorde_m = [(mi[m]["lorde"] or 0)*mul for m in filled_inc]
