@@ -417,8 +417,9 @@ elif page == "💸 Entrate":
     with p4:
         py_al = (1 - py_nette_m/py_lorde_m)*100 if py_lorde_m else 0
         st.markdown(kpi("Aliquota 2025", f"{py_al:.1f}%", "Pressione fiscale media"), unsafe_allow_html=True)
-    if not filled_inc:
-        st.warning("Nessun dato entrate nel Google Sheet.")
+    st.write(f"DEBUG: filled={filled}, last_month={last_month}, start_total={start_total}, last_total={last_total}")
+if not filled:
+    st.warning("Nessun mese compilato nel Google Sheet.")
         st.stop()
     st.markdown('<div class="sec-head">Entrate Mensili & Cumulate</div>', unsafe_allow_html=True)
     x_inc = [m[:3].upper() for m in filled_inc]
